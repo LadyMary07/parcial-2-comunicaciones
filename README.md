@@ -17,17 +17,19 @@ Este repositorio contiene la infraestructura web orquestada mediante Docker Comp
 * Git
 
 ## Instrucciones de Despliegue (Zero-Touch Deployment)
-De acuerdo con los parámetros de la evaluación, el clúster inicia limpiamente y sin pasos manuales ejecutando la siguiente secuencia de comandos:
+El repositorio incluye el archivo .env con las variables por defecto, por lo que basta con:
 
-```bash
-# 1. Clonar el repositorio
+\ash
 git clone https://github.com/LadyMary07/parcial-2-comunicaciones
-
-# 2. Ingresar a la carpeta del proyecto
-cd parcial2com
-
-# 3. Generar el archivo de variables de entorno por defecto
-cp .env.example .env
-
-# 4. Iniciar la infraestructura en segundo plano
+cd parcial-2-comunicaciones
 docker compose up -d
+Joomla se instala solo (tarda cerca de 30-60 s la primera vez).
+
+## Accesos
+
+| Servicio | URL | Credenciales |
+|----------|-----|--------------|
+| Joomla | http://localhost | - |
+| Joomla (admin) | http://localhost/administrator | admin / Admin12345!@# |
+| Grafana | http://localhost/grafana/ | admin / admin |
+| Jupyter | http://localhost/jupyter/?token=parcial123 | token: parcial123 |

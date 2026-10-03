@@ -1,6 +1,7 @@
 apiVersion: 1
 datasources:
   - name: PostgreSQL
+    uid: postgres-parcial
     type: postgres
     access: proxy
     url: database:5432
@@ -10,4 +11,7 @@ datasources:
     jsonData:
       database: joomla_db
       sslmode: disable
+      postgresVersion: 1600
+      timescaledb: false
     isDefault: true
+    editable: true

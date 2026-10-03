@@ -8,6 +8,7 @@ volumes:
   postgres_data:
   joomla_assets:
   shared_logs:
+  grafana_data:
 
 services:
   database:
@@ -26,6 +27,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   joomla:
     build: ./joomla
@@ -57,10 +59,12 @@ services:
     container_name: parcial_jupyter
     networks:
       - frontend_net
+    command: ["start-notebook.py", "--ServerApp.base_url=/jupyter"]
     volumes:
       - ./jupyter/notebooks:/home/jovyan/work
     environment:
       - JUPYTER_TOKEN=${JUPYTER_TOKEN}
+    restart: unless-stopped
 
   grafana:
     image: grafana/grafana:latest
@@ -69,13 +73,19 @@ services:
       - frontend_net
       - backend_net
     volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - shared_logs:/var/log/joomla_apache
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+      - shared_logs:/var/log/joomla_apache:ro
     environment:
       - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
       - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
     depends_on:
-      - database
+      database:
+        condition: service_healthy
+    restart: unless-stopped
 
   nginx:
     image: nginx:alpine
@@ -86,7 +96,6 @@ services:
       - frontend_net
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - shared_logs:/var/log/nginx
     depends_on:
       - joomla
       - jupyter

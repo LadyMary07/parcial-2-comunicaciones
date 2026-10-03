@@ -1,12 +1,30 @@
 #!/bin/bash
 set -e
 
+# El Apache de la imagen escribe sus logs a /dev/stdout y /dev/stderr (symlinks),
+# por lo que el volumen compartido quedaba sin archivos reales para Grafana.
+# Se reemplazan por archivos reales y se replican a la consola de Docker.
+mkdir -p /var/log/apache2
+rm -f /var/log/apache2/access.log /var/log/apache2/error.log /var/log/apache2/other_vhosts_access.log
+touch /var/log/apache2/access.log /var/log/apache2/error.log /var/log/apache2/other_vhosts_access.log
+chmod 644 /var/log/apache2/*.log
+tail -n 0 -F /var/log/apache2/access.log /var/log/apache2/error.log &
+
 (
     echo "AUTO-INSTALL: Esperando a que Joomla este listo..."
-    sleep 20
 
-    if [ -f /var/www/html/configuration.php ]; then
-        echo "AUTO-INSTALL: Joomla ya esta instalado. No se requiere accion."
+    # El entrypoint oficial instala Joomla con las variables JOOMLA_*.
+    # Se espera hasta 120 s a que aparezca configuration.php antes de usar el instalador de respaldo.
+    for i in $(seq 1 60); do
+        if [ -f /var/www/html/configuration.php ]; then
+            echo "AUTO-INSTALL: Joomla ya esta instalado. No se requiere accion."
+            exit 0
+        fi
+        sleep 2
+    done
+
+    if [ ! -f /var/www/html/installation/joomla.php ]; then
+        echo "AUTO-INSTALL: No se encontro el instalador de Joomla."
         exit 0
     fi
 
